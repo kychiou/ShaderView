@@ -17,4 +17,5 @@
     <string name="shader_name_color_animated">" color animated"</string>
     <string name="shader_name_animated_texture">animated_texture</string>
     <string name="shader_name_blur">blur</string>
+    <string name="shader_name_multi_shaders">multi_shaders</string>
 </resources>

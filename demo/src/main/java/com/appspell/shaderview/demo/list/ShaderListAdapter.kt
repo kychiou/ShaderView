@@ -6,7 +6,11 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.appspell.shaderview.demo.R
+import com.appspell.shaderview.demo.databinding.ItemMultiShaderBinding
 import com.appspell.shaderview.demo.databinding.ItemShaderBinding
+import com.appspell.shaderview.demo.multi.AnimatedTextureShader
+import com.appspell.shaderview.demo.multi.BlurShader
+import com.appspell.shaderview.demo.multi.CircleColorShader
 import com.appspell.shaderview.gl.params.ShaderParamsBuilder
 import kotlin.math.cos
 import kotlin.math.sin
@@ -16,7 +20,7 @@ enum class ItemType {
     NORMAL_MAP, NORMAL_MAP_2,
     SIMPLE_ANIMATION,
     COLOR_ANIMATED, ANIMATED_TEXTURES,
-    BLUR
+    BLUR, MULTI_SHADERS
 }
 
 class ShaderListAdapter : RecyclerView.Adapter<ShaderListAdapter.BaseShaderView>() {
@@ -29,16 +33,18 @@ class ShaderListAdapter : RecyclerView.Adapter<ShaderListAdapter.BaseShaderView>
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BaseShaderView {
         val inflater = LayoutInflater.from(parent.context)
-        val view = ItemShaderBinding.inflate(inflater)
+        fun shaderView() = ItemShaderBinding.inflate(inflater)
+        fun multiShaderView() = ItemMultiShaderBinding.inflate(inflater)
         return when (ItemType.values()[viewType]) {
-            ItemType.COLOR -> ColorShaderViewHolder(view)
-            ItemType.MULTIPLE_TEXTURES -> MultipleTexturesShaderViewHolder(view)
-            ItemType.NORMAL_MAP -> NormalMapShaderViewHolder(view)
-            ItemType.NORMAL_MAP_2 -> NormalMapShaderViewHolder2(view)
-            ItemType.SIMPLE_ANIMATION -> SimpleAnimationShaderViewHolder(view)
-            ItemType.COLOR_ANIMATED -> ColorAnimatedShaderViewHolder(view)
-            ItemType.ANIMATED_TEXTURES -> AnimatedTexturesShaderViewHolder(view)
-            ItemType.BLUR -> BlurShaderViewHolder(view)
+            ItemType.COLOR -> ColorShaderViewHolder(shaderView())
+            ItemType.MULTIPLE_TEXTURES -> MultipleTexturesShaderViewHolder(shaderView())
+            ItemType.NORMAL_MAP -> NormalMapShaderViewHolder(shaderView())
+            ItemType.NORMAL_MAP_2 -> NormalMapShaderViewHolder2(shaderView())
+            ItemType.SIMPLE_ANIMATION -> SimpleAnimationShaderViewHolder(shaderView())
+            ItemType.COLOR_ANIMATED -> ColorAnimatedShaderViewHolder(shaderView())
+            ItemType.ANIMATED_TEXTURES -> AnimatedTexturesShaderViewHolder(shaderView())
+            ItemType.BLUR -> BlurShaderViewHolder(shaderView())
+            ItemType.MULTI_SHADERS -> MultiShaderViewHolder(multiShaderView())
         }
     }
 
@@ -213,7 +219,7 @@ class ShaderListAdapter : RecyclerView.Adapter<ShaderListAdapter.BaseShaderView>
         }
     }
 
-    class BlurShaderViewHolder(binding: ItemShaderBinding) : ShaderListAdapter.BaseShaderView(binding.root) {
+    class BlurShaderViewHolder(binding: ItemShaderBinding) : BaseShaderView(binding.root) {
         init {
             binding.name.setText(R.string.shader_name_blur)
             binding.shaderView.apply {
@@ -235,6 +241,31 @@ class ShaderListAdapter : RecyclerView.Adapter<ShaderListAdapter.BaseShaderView>
                     val size = ((System.currentTimeMillis() - startTime) / 100) % maxBlurSize + 1
                     shaderParams.updateValue("uBlurSize", size.toInt())
                     shaderParams.updateValue("uScale", floatArrayOf(1.0f / width, 1.0f / height))
+                }
+            }
+        }
+    }
+
+    class MultiShaderViewHolder(binding: ItemMultiShaderBinding) : BaseShaderView(binding.root) {
+
+        private val shaderConfigSink by lazy {
+            listOf(BlurShader(binding.shaderView), CircleColorShader(), AnimatedTextureShader())
+        }
+
+        init {
+            binding.name.setText(R.string.shader_name_multi_shaders)
+
+            binding.shaderView.apply {
+                debugMode = true
+                updateContinuously = true // update each frame
+                shaderRawResIds = shaderConfigSink.map { it.shaderRawResId }
+                shaderParams = shaderConfigSink.map { it.shaderParams }
+                updateShaders()
+
+                val startTime = System.currentTimeMillis()
+                onDrawFrameListener = { index, _ ->
+                    val timestamp = System.currentTimeMillis() - startTime
+                    shaderConfigSink.getOrNull(index)?.onUpdate(timestamp)
                 }
             }
         }

@@ -101,7 +101,6 @@ class MultiShaderView @JvmOverloads constructor(
 
     private val rendererListener = object : GLQuadMultiRender.MultiShaderViewListener {
         override fun onSurfaceCreated() {
-            LibLog.d(TAG, "onSurfaceCreated")
             initShaders()
             post {
                 onViewReadyListener?.invoke(renderer.shaders)
@@ -149,7 +148,6 @@ class MultiShaderView @JvmOverloads constructor(
     }
 
     private fun initShaders() {
-        LibLog.d(TAG, "initShaders. needToRecreateShaders: $needToRecreateShaders, shaderRawResIds: $shaderRawResIds")
         if (needToRecreateShaders) {
             val tmpShaderParams = arrayListOf<GLShader>()
 

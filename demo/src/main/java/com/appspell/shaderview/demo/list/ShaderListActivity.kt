@@ -17,7 +17,8 @@ class ShaderListActivity : AppCompatActivity() {
                     COLOR, NORMAL_MAP_2,
                     BLUR, NORMAL_MAP,
                     COLOR_ANIMATED, MULTIPLE_TEXTURES,
-                    SIMPLE_ANIMATION, ANIMATED_TEXTURES
+                    SIMPLE_ANIMATION, ANIMATED_TEXTURES,
+                    MULTI_SHADERS
                 )
                     .repeat(10)
                     .map { it.ordinal }
